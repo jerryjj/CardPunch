@@ -23,7 +23,7 @@
 
 ## Device sends data
 
-  - device id
+  - device id (sha1 from imei and something else ["me card"s phone number for example])
   - local time
   - raw vCard data
   - location data
