@@ -28,6 +28,9 @@
         <property name="statistics" type="unsigned integer" link="cardpunch_exchange_statistics:id" index="true">
             <description>Link to the stats object for this exchange (most of the interesting datamining stuff is in that table)</description>
         </property>
+        <property name="contact" type="unsigned integer" link="cardpunch_exchange_contactinfo:id" index="true">
+            <description>Link parsed vCard data</description>
+        </property>
         <property name="initial" type="boolean" index="true">
             <description>Is this an initial card-send or proper exchange</description>
         </property>
@@ -62,6 +65,49 @@
             <description>Device XX</description>
         </property>
         -->
-        
+        <property name="contact" type="unsigned integer" link="cardpunch_exchange_contactinfo:id" index="true">
+            <description>
+                Link parsed vCard data. This link is also in the exchange object and that link should be considered
+                authoritative in case of conflict, this is just to slightly simply joins when working with the statistics table
+            </description>
+        </property>
+    </type>
+    <type name="cardpunch_exchange_contactinfo" table="cardpunch_exchange_contactinfo">
+        <property name="id" type="unsigned integer" primaryfield="id">
+            <description>Local non-replication-safe database identifier</description>
+        </property>
+        <!--
+            Fields that are have single value and are expected to be present, or "primary" version of common multivalued fields.
+            General and/or multivalued fields are stored in cardpunch_exchange_contactinfo_mvfield objects
+        -->
+        <property name="firstname" type="string" />
+        <property name="lastname" type="string" />
+        <property name="primaryemail" type="string" />
+        <!--
+        <property name="primaryXX" type="string" />
+        -->
+    </type>
+    <type name="cardpunch_exchange_contactinfo_mvfield" table="cardpunch_exchange_contactinfo_mvfield">
+        <property name="id" type="unsigned integer" primaryfield="id">
+            <description>Local non-replication-safe database identifier</description>
+        </property>
+        <property name="contact" type="unsigned integer" link="cardpunch_exchange_contactinfo:id" index="true">
+            <description>Link to the contact object this multivalue is for</description>
+        </property>
+        <property name="name" type="string">
+            <description>Name of the multivalued field (for example "email")</description>
+        </property>
+        <property name="valstr" type="string" index="true">
+            <description>String value</description>
+        </property>
+        <property name="valtext" type="text">
+            <description>Long text value (NOT indexed!)</description>
+        </property>
+        <property name="valint" type="integer" index="true">
+            <description>integer value</description>
+        </property>
+        <property name="valfloat" type="integer" index="true">
+            <description>float value</description>
+        </property>
     </type>
 </Schema>
