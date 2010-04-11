@@ -72,7 +72,7 @@ OS4? MDKs turf
 
 ## The one the client talks with
 
-lighttpd or just twisted or somesuch (we don't really need "real" web server for this) for this
+tornado, lighttpd or just twisted or somesuch (we don't really need "real" web server for this) for this
 
 ## The one browsers talk with
 
