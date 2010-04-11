@@ -13,7 +13,8 @@ import tornado.ioloop
 import tornado.web
 
 application = tornado.web.Application([
-    (r"/", handlers.MainHandler),
+    (r"/", handlers.hello),
+    (r"/async", handlers.asyncwait),
 ])
 
 if __name__ == "__main__":
