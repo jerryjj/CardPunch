@@ -29,7 +29,7 @@
             <description>Link to the stats object for this exchange (most of the interesting datamining stuff is in that table)</description>
         </property>
         <property name="contact" type="unsigned integer" link="cardpunch_exchange_contactinfo:id" index="true">
-            <description>Link parsed vCard data</description>
+            <description>Link to parsed vCard data</description>
         </property>
         <property name="initial" type="boolean" index="true">
             <description>Is this an initial card-send or proper exchange</description>
@@ -67,12 +67,13 @@
         -->
         <property name="contact" type="unsigned integer" link="cardpunch_exchange_contactinfo:id" index="true">
             <description>
-                Link parsed vCard data. This link is also in the exchange object and that link should be considered
+                Link to parsed vCard data. This link is also in the exchange object and that link should be considered
                 authoritative in case of conflict, this is just to slightly simply joins when working with the statistics table
             </description>
         </property>
     </type>
     <type name="cardpunch_exchange_contactinfo" table="cardpunch_exchange_contactinfo">
+        <!-- These objects are created from the vCard data by a background process -->
         <property name="id" type="unsigned integer" primaryfield="id">
             <description>Local non-replication-safe database identifier</description>
         </property>
