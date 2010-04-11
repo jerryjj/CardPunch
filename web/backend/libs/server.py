@@ -3,17 +3,21 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 
+storage.instance.initialize()
 
-class wrapper:
-    def __init__(self):
-        self.uris = tornado.web.Application
-        ([
-            (r"/", handlers.MainHandler),
-        ])
-        self.server = tornado.httpserver.HTTPServer(self.uris)
-        self.server.listen(8080)
 
-    def start(self):
-        tornado.ioloop.IOLoop.instance().start()
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write("Hello, world")
 
-instance = wrapper()
+routes = tornado.web.Application
+([
+#    (r"/", handlers.MainHandler),
+    (r"/", MainHandler),
+])
+
+
+def start():
+    http_server = tornado.httpserver.HTTPServer(routes)
+    http_server.listen(8080)
+    tornado.ioloop.IOLoop.instance().start()

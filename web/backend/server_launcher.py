@@ -9,4 +9,5 @@ if os.path.isdir(local_module_dir):
 from libs import server
 
 if __name__ == "__main__":
-    server.instance.start()
+    server.start()
+
