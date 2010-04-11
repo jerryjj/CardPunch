@@ -1,0 +1,90 @@
+# cardpunch data model
+
+## Server stored data
+
+### vCard exchange data per device
+
+  - device id 
+  - device time delta
+  - server time
+  - raw vCard data
+  - coordinates (truncated/rounded to accuracy?)
+  - full device provided location data ? (could and maybe should be in separate table and just linked)
+  - link to the other card (in case we wish to use archive storage engine or something like that this needs to be a separate link table)
+  - Device statistics (possibly again separate [possibly same] statistics table as with full location data)
+    - make and model
+    - firmware version ?
+  - initial (true/false, ie is this program startup provided or actual exchange [should these go to separate table ??])
+
+### Helper tables/views for data mining ?
+
+  - links to exchanges per email address ?
+  - links to exchanges per date and coordinates ?
+
+## Device sends data
+
+  - device id
+  - local time
+  - raw vCard data
+  - location data
+     - lat
+     - lon
+     - source
+     - accuracy
+  - device statistics (see server stored data)
+  - initial true/false
+
+# Client basic process
+
+## Startup
+
+  - If no "me card" is selected show a selector
+  - "please wait"
+  - Start location services and get at least cell-tower accurate location
+  - Open keep-alive http connection (COMET style) to the server and send initial vcard and location data to make sure server works, keep note of local time and/or location when this was done.
+  - "ready to punch"
+  - waitloop reading accelometer data and sending keep-alive pings to server (every 10sec ?) as long as app is in foreground
+  - If app gets backgrounded tear down the server connection and stop reading data.
+
+## Gesture
+
+  - Send data package and wait for server response
+  - If ok try to pre-fill a notes field with some guestimated info (if calendar has an event for current time use the event title etc) and open contacts app.
+  - if server responds with failure tell to retry
+  - if we reach a timeout (max 5 seconds ?)  tear down server connection and reconnect. (basically background+foreground the program)
+
+## Returning to foreground
+
+  - Open server connection as in startup but send the "initial card" only if it's been over X minutes or location has changed by Y amount
+
+
+# Initial client target platforms
+
+## Maemo 5
+
+Prototype in python, think of converting to a compiled language later (smaller, faster, less dependencies), since UI is trivially simple prototype first in GTK (to avoid the intermediate QT dependency hell -problem) and convert to QT after PR1.2 is out.
+
+## iPhone
+
+OS4? MDKs turf
+
+# Server 
+
+## The one the client talks with
+
+lighttpd or just twisted or somesuch (we don't really need "real" web server for this) for this
+
+## The one browsers talk with
+
+lighthttpd, serves just a simple page with setup instructions based on detected device and a counter of cards exchanged (when number is high enough)
+
+## Load balancing (for client server)
+
+At some point we need to setup a system where we have a sharding algo to spread clients based on their location (ip-based location might be too slow, so maybe the client needs to know how the sharding is done and connect to correct name automatically [there may be further sharding or shared-database load-balancing done below this level if neccessary]), these servers will in the background replicate to and from a central server (not accessible by anything else) so that eventually all nodes have all data but at exchange time we only need to ensure all clients at same location (withing accuracy) reach same node.
+
+We probably want to think about EC2 and automatic scaling pretty early.
+
+## Load balancing (for web server)
+
+As long as the web-side of things stays trivial this is not a problem, one node will likely be enough for a long time but it needs to get data replicated from the master database from time to time.
+
