@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Schema xmlns="http://www.midgard-project.org/repligard/1.4">
+    <type name="cardpunch_exchange" table="cardpunch_exchange">
+        <property name="id" type="unsigned integer" primaryfield="id">
+            <description>Local non-replication-safe database identifier</description>
+        </property>
+        <property name="servertime" type="integer" index="true">
+            <description>Server unix-timestamp for receiving the entry</description>
+        </property>
+        <property name="timedelta" type="integer">
+            <description>delta between servertime and client reported local time</description>
+        </property>
+        <property name="vcard" type="text">
+            <description>Raw vCard data</description>
+        </property>
+        <property name="deviceid" type="string" dbtype="binary(20)" index="true">
+            <description>SHA1 (160 bits == 20 bytes) device id hash</description>
+        </property>
+        <property name="lat" type="float" index="true">
+            <description>Latitude, rounded as per accuracy</description>
+        </property>
+        <property name="lon" type="float" index="true">
+            <description>Latitude, rounded as per accuracy</description>
+        </property>
+        <property name="counterpart" type="unsigned integer" link="cardpunch_exchange:id" index="true">
+            <description>Link to the counterpart of this exchange</description>
+        </property>
+        <property name="statistics" type="unsigned integer" link="cardpunch_exchange_statistics:id" index="true">
+            <description>Link to the stats object for this exchange (most of the interesting datamining stuff is in that table)</description>
+        </property>
+        <property name="initial" type="boolean" index="true">
+            <description>Is this an initial card-send or proper exchange</description>
+        </property>
+    </type>
+    <type name="cardpunch_exchange_statistics" table="cardpunch_exchange_statistics">
+        <property name="id" type="unsigned integer" primaryfield="id">
+            <description>Local non-replication-safe database identifier</description>
+        </property>
+        <property name="fulllat" type="float" index="true">
+            <description>Latitude, as gotten from device</description>
+        </property>
+        <property name="fulllon" type="float" index="true">
+            <description>Latitude, as gotten from device</description>
+        </property>
+        <property name="geoaccuracy" type="float" >
+            <description>Accuracy/confidence number for the coordinates</description>
+        </property>
+        <property name="geoprovider" type="string" dbtype="varchar(10)">
+            <description>How did the device get the coordinates, "gps", "cellid", etc</description>
+        </property>
+        <property name="devicemake" type="string">
+            <description>Device make</description>
+        </property>
+        <property name="devicemodel" type="string">
+            <description>Device model</description>
+        </property>
+        <property name="devicefirmare" type="string">
+            <description>Device firmware version</description>
+        </property>
+        <!--
+        <property name="deviceXX" type="string">
+            <description>Device XX</description>
+        </property>
+        -->
+        
+    </type>
+</Schema>
