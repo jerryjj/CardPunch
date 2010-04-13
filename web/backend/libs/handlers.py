@@ -100,7 +100,7 @@ class exchange(tornado.web.RequestHandler):
                 # We have fuzz left, narrow it down and recurse
                 return self.look_for_counterpart_async(my_entry, iteration+1, fuzz-1)
             # Still multiple results. Tell the client to try again
-            self.write("<reply><status>0</status><message>%s</message></reply>" % "Please try again")
+            self.write("<reply><status>0</status><message>%s</message></reply>" % "Too many potential partners found, please try again")
             return self.finish()
 
         if (    len(results) == 0
@@ -108,10 +108,9 @@ class exchange(tornado.web.RequestHandler):
                  or int(time.time()) - my_entry.servertime > 5)
             ):
             # No results and ran out of time/iterations. Tell the client to try again
-            self.write("<reply><status>0</status><message>%s</message></reply>" % "Please try again")
+            self.write("<reply><status>0</status><message>%s</message></reply>" % "Partner not found, please try again")
             return self.finish()
 
         # No valid replies and no timeouts yet, try again in 1sec
         tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 1, lambda:  self.look_for_counterpart_async(my_entry, iteration+1, fuzz))
-
 
