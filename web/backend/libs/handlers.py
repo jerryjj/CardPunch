@@ -52,8 +52,8 @@ class exchange(tornado.web.RequestHandler):
         entry.timedelta = entry.servertime - int(self.get_argument("localtime"))
         entry.vcard = self.get_argument("vcard")
         entry.deviceid = self.get_argument("deviceid")
-        entry.lat = stats_entry.fulllat # TODO: round
-        entry.lon = stats_entry.fulllon # TODO: round
+        entry.lat = round(stats_entry.fulllat, 4) # 4 digits = 36.432 feet accuracy (See also look_for_counterpart_async if you change this)
+        entry.lon = round(stats_entry.fulllon, 4) # 4 digits = 36.432 feet accuracy (See also look_for_counterpart_async if you change this)
         entry.initial = bool(self.get_argument("initial"))
         entry.statistics = stats_entry.id
 
@@ -71,27 +71,29 @@ class exchange(tornado.web.RequestHandler):
     def look_for_counterpart_async(self, my_entry, iteration, fuzz):
         print "DEBUG: handlers.exchange.look_for_counterpart_async() called for entry #%d, iteration %d" & (my_entry.id, iteration)
 
-        results = []
-        
-        # TODO: Query for counterpart
+        # Query for counterpart
         qb = storage.midgard.query_builder('cardpunch_exchange')
+        qb.add_constraint('id', '<>'. my_entry.id)
         # These are rounded to correct accuracy on before saving so that there is no need for fuzzy logic at this moment
-        qb.add_constraint('lat', '=', my_entry.lat)
-        qb.add_constraint('lon', '=', my_entry.lon)
+        # PONDER: Test how db engines react to the problem of it being impossible to represent all floating point numbers accurately (this is why we use string format here)
+        qb.add_constraint('lat', '=', "%1.4f" % my_entry.lat)
+        qb.add_constraint('lon', '=', "%1.4f" % my_entry.lon)
         # Allow in total fuzz*2+1 seconds of window
         qb.add_constraint('servertime', '>=', my_entry.servertime - fuzz)
         qb.add_constraint('servertime', '<=', my_entry.servertime + fuzz)
+        results = qb.execute()
 
-        
         if len(results) == 1:
             # Found match, link the two and reply to client
             eir_entry = results[0]
+            self.write("<reply><status>1</status><vcard>%s</vcard></reply>" % eir_entry.vcard)
+            self.finish()
+            # These are processed after sending output to client...
             eir_entry.counterpart = my_entry.id
             my_entry.counterpart = eir_entry.id
             my_entry.update()
             eir_entry.update()
-            self.write("<reply><status>1</status><vcard>%s</vcard></reply>" % eir_entry.vcard)
-            return self.finish()
+            return
 
         if len(results) > 1:
             if fuzz > 0:
@@ -100,7 +102,7 @@ class exchange(tornado.web.RequestHandler):
             # Still multiple results. Tell the client to try again
             self.write("<reply><status>0</status><message>%s</message></reply>" % "Please try again")
             return self.finish()
-        
+
         if (    len(results) == 0
             and (   iteration > 10
                  or int(time.time()) - my_entry.servertime > 5)
@@ -111,4 +113,5 @@ class exchange(tornado.web.RequestHandler):
 
         # No valid replies and no timeouts yet, try again in 1sec
         tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 1, lambda:  self.look_for_counterpart_async(my_entry, iteration+1, fuzz))
+
 
