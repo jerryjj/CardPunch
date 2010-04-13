@@ -15,6 +15,7 @@ import tornado.web
 application = tornado.web.Application([
     (r"/", handlers.hello),
     (r"/async", handlers.asyncwait),
+    (r"/exchange", handlers.exchange),
 ])
 
 if __name__ == "__main__":
