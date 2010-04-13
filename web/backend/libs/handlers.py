@@ -26,6 +26,7 @@ class asyncwait(tornado.web.RequestHandler):
         print ("inside finish")
         self.write("Long running job complete")
         self.finish()
+        print "after self.finish()"
 
 class exchange(tornado.web.RequestHandler):
     @tornado.web.asynchronous
@@ -64,5 +65,50 @@ class exchange(tornado.web.RequestHandler):
         if entry.initial:
             self.finish()
 
-        # TODO: Register async method to poll for the counterpart every second
-        self.finish()
+        # Register async method to poll for the counterpart every second
+        tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 1, lambda:  self.look_for_counterpart_async(entry, 1, 2))
+
+    def look_for_counterpart_async(self, my_entry, iteration, fuzz):
+        print "DEBUG: handlers.exchange.look_for_counterpart_async() called for entry #%d, iteration %d" & (my_entry.id, iteration)
+
+        results = []
+        
+        # TODO: Query for counterpart
+        qb = storage.midgard.query_builder('cardpunch_exchange')
+        # These are rounded to correct accuracy on before saving so that there is no need for fuzzy logic at this moment
+        qb.add_constraint('lat', '=', my_entry.lat)
+        qb.add_constraint('lon', '=', my_entry.lon)
+        # Allow in total fuzz*2+1 seconds of window
+        qb.add_constraint('servertime', '>=', my_entry.servertime - fuzz)
+        qb.add_constraint('servertime', '<=', my_entry.servertime + fuzz)
+
+        
+        if len(results) == 1:
+            # Found match, link the two and reply to client
+            eir_entry = results[0]
+            eir_entry.counterpart = my_entry.id
+            my_entry.counterpart = eir_entry.id
+            my_entry.update()
+            eir_entry.update()
+            self.write("<reply><status>1</status><vcard>%s</vcard></reply>" % eir_entry.vcard)
+            return self.finish()
+
+        if len(results) > 1:
+            if fuzz > 0:
+                # We have fuzz left, narrow it down and recurse
+                return self.look_for_counterpart_async(my_entry, iteration+1, fuzz-1)
+            # Still multiple results. Tell the client to try again
+            self.write("<reply><status>0</status><message>%s</message></reply>" % "Please try again")
+            return self.finish()
+        
+        if (    len(results) == 0
+            and (   iteration > 10
+                 or int(time.time()) - my_entry.servertime > 5)
+            ):
+            # No results and ran out of time/iterations. Tell the client to try again
+            self.write("<reply><status>0</status><message>%s</message></reply>" % "Please try again")
+            return self.finish()
+
+        # No valid replies and no timeouts yet, try again in 1sec
+        tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 1, lambda:  self.look_for_counterpart_async(my_entry, iteration+1, fuzz))
+
