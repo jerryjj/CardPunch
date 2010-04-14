@@ -18,7 +18,7 @@
 
 ### Helper tables/views for data mining ?
 
-  - links to exchanges per email address ?
+  - links to exchanges per email address / phone number ?
   - links to exchanges per date and coordinates ?
 
 ## Device sends data
@@ -62,6 +62,7 @@
 ## Maemo 5
 
 Prototype in python, think of converting to a compiled language later (smaller, faster, less dependencies), since UI is trivially simple prototype first in GTK (to avoid the intermediate QT dependency hell -problem) and convert to QT after PR1.2 is out.
+W_I is working on a QT Quick based prototype.
 
 ## iPhone
 
@@ -75,7 +76,7 @@ No idea who will do this or how.
 
 ## The one the client talks with
 
-tornado, lighttpd or just twisted or somesuch (we don't really need "real" web server for this) for this
+tornado, lighttpd or just twisted or somesuch (we don't really need "real" web server for this)
 
 ## The one browsers talk with
 
@@ -85,7 +86,7 @@ lighthttpd, serves just a simple page with setup instructions based on detected 
 
 At some point we need to setup a system where we have a sharding algo to spread clients based on their location (ip-based location might be too slow, so maybe the client needs to know how the sharding is done and connect to correct name automatically [there may be further sharding or shared-database load-balancing done below this level if neccessary]), these servers will in the background replicate to and from a central server (not accessible by anything else) so that eventually all nodes have all data but at exchange time we only need to ensure all clients at same location (withing accuracy) reach same node.
 
-We probably want to think about EC2 and automatic scaling pretty early.
+We probably want to think about EC2 and automatic scaling pretty early. (Reddit.com has done this pretty well)
 
 ## Load balancing (for web server)
 
